@@ -1,97 +1,71 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "SolMarket"
+description: "The decentralized prediction market for Solana memecoins. Bet on price movements. Trustless. Transparent. On-chain."
 ---
 
-## Setting up
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="SolMarket Hero"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="SolMarket Hero"
+/>
 
-Get your documentation site up and running in minutes.
+## What is SolMarket?
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+SolMarket is a **parimutuel prediction market** built on Solana where users bet on whether a memecoin's price will go **Up** or **Down** within a given timeframe.
 
-## Make it yours
+All funds are held by a **smart contract** — never by the team. Payouts are automatic, proportional, and verifiable on-chain.
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={3}>
+  <Card title="Non-custodial" icon="shield-halved">
+    Funds are held in Program Derived Addresses (PDAs) on Solana. No human has the private key.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Parimutuel" icon="scale-balanced">
+    The entire pool is split among winners proportionally to their shares. Simple, fair, transparent.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="On-chain" icon="link">
+    Every bet, every payout, every resolution is a Solana transaction. Fully verifiable by anyone.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+---
 
-Everything you need to create world-class documentation.
+## How it works in 30 seconds
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Steps>
+  <Step title="Pick a market">
+    Choose a memecoin prediction — e.g. *"Will $BONK be above $0.00003 in 1 hour?"*
+  </Step>
+  <Step title="Take a side">
+    Buy **Up** or **Down** shares with USDC. Each share costs between 1¢ and 99¢ based on current probability.
+  </Step>
+  <Step title="Wait for resolution">
+    The oracle checks the token price at expiry via DexScreener's public API.
+  </Step>
+  <Step title="Get paid">
+    If you're right, claim your proportional share of the entire pool. If nobody resolves, you get a refund.
+  </Step>
+</Steps>
 
-## Need inspiration?
+---
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Explore the docs
+
+<CardGroup cols={2}>
+  <Card title="How it works" icon="gears" href="/how-it-works">
+    Architecture, flow diagrams, and system design.
+  </Card>
+  <Card title="Smart contract security" icon="lock" href="/security/overview">
+    Why your funds are safe and how to verify it yourself.
+  </Card>
+  <Card title="$SOLMARKET Token" icon="coins" href="/token/overview">
+    The protocol token — tokenomics, Meteora launch, buyback & burn.
+  </Card>
+  <Card title="Protocol mechanics" icon="calculator" href="/protocol/parimutuel">
+    Parimutuel math, fee structure, oracle design.
+  </Card>
+</CardGroup>

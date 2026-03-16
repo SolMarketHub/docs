@@ -1,33 +1,69 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'SolMarket backend API for market data and user operations.'
 ---
 
+## Base URL
+
+```
+https://api.solmarket.app/api/v1
+```
+
 <Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
+  The SolMarket API is used by the frontend to fetch market data, user positions, and submit metadata. **All financial transactions happen directly on Solana** — the API never handles funds.
 </Note>
 
-## Welcome
+## Endpoints
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+### Markets
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/markets` | List all markets (active, resolved, refunded) |
+| `GET` | `/markets/:id` | Get a single market with pool data and activity |
+| `POST` | `/markets` | Create a new market (admin only) |
+
+### Users
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/users/:wallet/bets` | Get all bets for a wallet address |
+| `GET` | `/users/:wallet/claims` | Get all claims for a wallet address |
+
+### Admin
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/admin/resolve` | Trigger market resolution (oracle) |
+| `POST` | `/admin/create-market` | Create a new prediction market |
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Admin endpoints require a Bearer token. Public endpoints (markets, user data) are read-only and unauthenticated.
+
+```bash
+# Example: Fetch all active markets
+curl https://api.solmarket.app/api/v1/markets
+
+# Example: Fetch user bets
+curl https://api.solmarket.app/api/v1/users/YOUR_WALLET/bets
+```
+
+## Response format
+
+All responses return JSON:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "data": [...],
+  "error": null
+}
+```
+
+Error responses:
+
+```json
+{
+  "error": "Market not found"
+}
 ```
