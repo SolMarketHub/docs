@@ -27,6 +27,7 @@
               "protocol/parimutuel",
               "protocol/smart-contract",
               "protocol/oracle",
+              "protocol/treasury-bots",
               "protocol/fees"
             ]
           },

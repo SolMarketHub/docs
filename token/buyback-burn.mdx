@@ -6,19 +6,20 @@ icon: "fire"
 
 ## The deflationary flywheel
 
-SolMarket generates revenue from two sources. A portion of all revenue is used to **buy $SOLMARKET tokens from the open market** and **burn them permanently**, reducing the total supply forever.
+SolMarket prediction-market fees are routed to a dedicated buyback wallet. Those funds are used to **buy $SOLMARKET tokens from the open market** and **burn them permanently**, reducing the total supply forever.
 
 ```mermaid
 graph TD
-    A[Users trade on SolMarket] -->|1% claim fee| B[Protocol Revenue]
-    C[Users trade $SOLMARKET] -->|DBC/DAMM fees| B
-    B -->|20% of revenue| D[Buyback Wallet]
+    A[Users bet on SolMarket] -->|2% bet fee| D[Buyback Wallet]
+    C[Users trade $SOLMARKET] -->|Hatch/DLMM fees| T[Market Treasury]
+    T -->|Treasury policy| M[Markets + Dev + Reserve + Ops]
     D -->|Market buy| E[$SOLMARKET tokens]
     E -->|Send to| F[🔥 Burn Address]
     F -->|Permanent| G[Supply reduced forever]
     G -->|Scarcity| H[Value accrual for holders]
     H -->|More users| A
-    style B fill:#9945FF,color:#fff
+    style T fill:#9945FF,color:#fff
+    style M fill:#9945FF,color:#fff
     style D fill:#14F195,color:#000
     style F fill:#FF6B6B,color:#fff
     style G fill:#FF6B6B,color:#fff
@@ -28,18 +29,30 @@ graph TD
 
 ## Revenue sources
 
-### Source 1: Prediction market fees
+### Source 1: Prediction market bet fees
 
-Every winning claim on SolMarket has a **1% protocol fee**. From this:
+Every bet purchase includes a **2% protocol fee** routed to `BET_FEE_WALLET`.
 
-| Use | Share | Example ($100 payout) |
+| Use | Share | Example ($100 bet) |
 |-----|-------|-----------------------|
-| Team & operations | 80% | $0.80 |
-| **Buyback & burn** | **20%** | **$0.20** |
+| **Buyback & burn** | **100% of prediction-market fees** | **$2.00** |
 
 ### Source 2: Token trading fees
 
-$SOLMARKET trading on Meteora generates fees:
+$SOLMARKET trading through Hatch/DLMM generates fees for the market treasury. These are not automatically all spent on buybacks.
+
+Default treasury allocation:
+
+| Use | Share |
+|-----|-------|
+| Market reinvestment | 15% |
+| Developer/profit | 55% |
+| Reserve | 20% |
+| Operations | 10% |
+
+See [Treasury & Market Bots](/protocol/treasury-bots) for the spend caps and market seed policy.
+
+Legacy launch fee context:
 
 **DBC phase (2.5% fee):**
 
@@ -62,7 +75,7 @@ $SOLMARKET trading on Meteora generates fees:
 
 <Steps>
   <Step title="Revenue accumulates">
-    Protocol fees from prediction markets and token trading fees accumulate in the revenue wallet.
+    Prediction-market fees accumulate in `BET_FEE_WALLET`. Token trading fees accumulate separately in the market treasury.
   </Step>
   <Step title="Buyback execution">
     At regular intervals, the protocol uses the accumulated USDC/SOL to **market-buy $SOLMARKET** from the Meteora pool.
@@ -82,17 +95,17 @@ $SOLMARKET trading on Meteora generates fees:
 
 ## Impact modeling
 
-Here's how the buyback & burn scales with protocol volume:
+Here's how the buyback & burn scales with prediction-market volume:
 
-| Monthly prediction volume | Protocol fees (1%) | Buyback amount (20%) | Annual burn |
+| Monthly prediction volume | Bet fees (2%) | Buyback amount | Annual burn |
 |--------------------------|-------------------|--------------------|-------------|
-| $100,000 | $1,000 | $200 | $2,400 |
-| $500,000 | $5,000 | $1,000 | $12,000 |
-| $1,000,000 | $10,000 | $2,000 | $24,000 |
-| $5,000,000 | $50,000 | $10,000 | $120,000 |
+| $100,000 | $2,000 | $2,000 | $24,000 |
+| $500,000 | $10,000 | $10,000 | $120,000 |
+| $1,000,000 | $20,000 | $20,000 | $240,000 |
+| $5,000,000 | $100,000 | $100,000 | $1,200,000 |
 
 <Note>
-  These figures only include prediction market fees. Token trading fees on Meteora provide **additional** buyback revenue on top of this. The actual burn rate will be higher.
+  These figures only include prediction-market bet fees. Token trading fees primarily fund the market treasury, developer/profit allocation, reserve, and operations.
 </Note>
 
 ---

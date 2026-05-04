@@ -1,0 +1,133 @@
+---
+title: "Treasury & Market Bots"
+description: "How SolMarket funds, creates, and seeds automated prediction markets without overspending treasury capital."
+icon: "bot"
+---
+
+## Overview
+
+SolMarket separates protocol money flows into two wallets:
+
+| Wallet | Purpose |
+|--------|---------|
+| `MARKET_TREASURY_WALLET` | Receives token-fee claims and funds automated market creation/seed liquidity. |
+| `BET_FEE_WALLET` | Receives prediction-market fees and is reserved for buyback and burn. |
+
+<Info>
+  The market bot is intentionally conservative. Its job is to create enough high-quality markets to drive volume, not to recycle all protocol revenue into seed bets.
+</Info>
+
+---
+
+## Treasury allocation
+
+Every detected token-fee inflow is recorded and split by policy:
+
+| Allocation | Default share | Purpose |
+|------------|---------------|---------|
+| Market reinvestment | 15% | Fund selected automated markets and initial YES/NO seed. |
+| Developer/profit | 55% | Founder upside, development, and business profit. |
+| Reserve | 20% | Safety buffer and future strategic uses. |
+| Operations | 10% | Infrastructure, RPC, monitoring, and admin costs. |
+
+```env
+TREASURY_MARKET_REINVEST_BPS=1500
+TREASURY_DEV_PROFIT_BPS=5500
+TREASURY_RESERVE_BPS=2000
+TREASURY_OPERATIONS_BPS=1000
+```
+
+Example with `5,000 USDC` equivalent revenue:
+
+| Bucket | Amount |
+|--------|--------|
+| Market reinvestment | `750 USDC` |
+| Developer/profit | `2,750 USDC` |
+| Reserve | `1,000 USDC` |
+| Operations | `500 USDC` |
+
+This avoids the bad outcome where most revenue is automatically spent creating too many markets.
+
+---
+
+## Market spend caps
+
+The market bot has a second layer of protection. Even inside the market reinvestment bucket, it does not consider the entire treasury spendable.
+
+```env
+TREASURY_MAX_MARKET_SPEND_BPS=1000
+TREASURY_MARKET_RUNWAY_CAP_USDC=250
+MARKET_MIN_TREASURY_USDC=10
+MAX_AUTO_MARKETS_PER_HOUR=3
+```
+
+Spendable market budget is the smaller of:
+
+1. `10%` of USDC above the minimum reserve
+2. `250 USDC` runway cap
+
+So if the treasury has thousands of USDC, the bot still behaves like an operator with a fixed market-making budget, not like an unlimited spender.
+
+---
+
+## Initial liquidity seed
+
+Automated markets start near `50/50` by buying both sides in tiny balanced chunks.
+
+```env
+BOT_SEED_MIN_USDC_PER_SIDE=2
+BOT_SEED_SHORT_USDC=2
+BOT_SEED_NORMAL_USDC=5
+BOT_SEED_PREMIUM_USDC=10
+BOT_SEED_MAX_USDC_PER_SIDE=10
+```
+
+At a `50/50` start:
+
+| Seed per side | Tickets per side | Total market seed |
+|---------------|------------------|-------------------|
+| `2 USDC` | 4 YES + 4 NO | `4 USDC` |
+| `5 USDC` | 10 YES + 10 NO | `10 USDC` |
+| `10 USDC` | 20 YES + 20 NO | `20 USDC` |
+
+The default hard cap is `10 USDC` per side.
+
+---
+
+## Why chunks are small
+
+The contract price changes after each buy. If a bot bought a large YES chunk first and then bought NO, the NO leg could execute at a different price. Ticket counts could end equal, but the USDC pools could be uneven.
+
+To avoid that, SolMarket seeds with fixed chunks:
+
+```text
+TX 1: buy YES 2 tickets + buy NO 2 tickets
+TX 2: buy YES 2 tickets + buy NO 2 tickets
+TX 3: buy YES 2 tickets + buy NO 2 tickets
+...
+```
+
+Two tickets cost `1 USDC` at `50/50`, satisfying the contract minimum while keeping visible odds and pools aligned.
+
+---
+
+## Market selection
+
+The market engine scores both the system and the token candidate.
+
+System score includes:
+
+- recent token-fee claims
+- treasury SOL/USDC health
+- recent platform volume
+- penalty for active markets with no volume
+
+Candidate score includes:
+
+- 5-minute and 1-hour volume
+- recent transaction count
+- liquidity
+- volatility
+- market-cap range
+
+The bot creates a market only when the combined score is high enough. If too many active markets have no user volume, the bot enters conservative mode.
