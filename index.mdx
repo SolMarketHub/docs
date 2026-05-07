@@ -22,7 +22,7 @@ All funds are held by a **smart contract** — never by the team. Payouts are au
 
 <CardGroup cols={3}>
   <Card title="Non-custodial" icon="shield-halved">
-    Funds are held in Program Derived Addresses (PDAs) on Solana. No human has the private key.
+    Market funds are held in on-chain vaults. No team wallet controls user principal.
   </Card>
   <Card title="Parimutuel" icon="scale-balanced">
     The entire pool is split among winners proportionally to their shares. Simple, fair, transparent.
@@ -44,7 +44,7 @@ All funds are held by a **smart contract** — never by the team. Payouts are au
     Buy **Up** or **Down** shares with USDC. Each share costs between 1¢ and 99¢ based on current probability.
   </Step>
   <Step title="Wait for resolution">
-    The oracle checks the token price at expiry via DexScreener's public API.
+    The resolution engine checks the agreed market reference at expiry.
   </Step>
   <Step title="Get paid">
     If you're right, claim your proportional share of the entire pool. If nobody resolves, you get a refund.
@@ -57,9 +57,9 @@ All funds are held by a **smart contract** — never by the team. Payouts are au
 
 <CardGroup cols={2}>
   <Card title="How it works" icon="gears" href="/how-it-works">
-    Architecture, flow diagrams, and system design.
+    The product flow from trade to resolution to claim.
   </Card>
-  <Card title="Smart contract security" icon="lock" href="/security/overview">
+  <Card title="Fund safety" icon="lock" href="/security/overview">
     Why your funds are safe and how to verify it yourself.
   </Card>
   <Card title="$SOLMARKET Token" icon="coins" href="/token/overview">
@@ -68,8 +68,8 @@ All funds are held by a **smart contract** — never by the team. Payouts are au
   <Card title="Hatch launch &amp; Dev Mode" icon="egg" href="/protocol/hatch-launch">
     100% SOL fees → dev wallet, 100% token fees → burn.
   </Card>
-  <Card title="Bot architecture" icon="robot" href="/protocol/bot-architecture">
-    Claim, market engine, buyback &amp; burn — the three bots that run the protocol.
+  <Card title="Capital Orchestrator" icon="robot" href="/protocol/bot-architecture">
+    How revenue becomes markets, seed liquidity, buybacks, and burns.
   </Card>
   <Card title="Holder gate" icon="user-shield" href="/protocol/holder-gate">
     How top $SOLMARKET holders unlock /create-market.

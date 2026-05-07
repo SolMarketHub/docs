@@ -25,7 +25,6 @@
             "group": "Protocol",
             "pages": [
               "protocol/parimutuel",
-              "protocol/smart-contract",
               "protocol/oracle",
               "protocol/hatch-launch",
               "protocol/bot-architecture",
@@ -53,17 +52,6 @@
               "token/overview",
               "token/tokenomics",
               "token/buyback-burn"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API",
-            "pages": [
-              "api-reference/introduction"
             ]
           }
         ]

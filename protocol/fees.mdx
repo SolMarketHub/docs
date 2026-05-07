@@ -1,77 +1,71 @@
 ---
 title: "Fee Structure"
-description: "Protocol fees, distribution, and buyback mechanism."
+description: "How SolMarket routes fees into buybacks, burns, treasury, and market growth."
 icon: "percent"
 ---
 
-## Overview
+## Simple fee model
 
-SolMarket charges a simple prediction-market fee at purchase time. This fee is routed to the buyback wallet and kept separate from market treasury funds.
+SolMarket charges a 2% fee when a user buys prediction-market tickets. The fee goes to the buyback and burn wallet. The user's market principal stays in the market pool.
+
+```mermaid
+graph LR
+    A[$100 ticket purchase] --> B[$98 market principal]
+    A --> C[$2 protocol fee]
+    C --> D[Buyback + burn]
+```
 
 <Info>
-  **Current prediction-market fee: 2% on each bet purchase.**<br/>
-  Market seed capital and token-fee claims use a separate treasury flow.
+  Winning claims do not pay a second protocol fee.
 </Info>
 
 ---
 
-## How fees work
+## Fee destinations
+
+| Flow | Destination | Purpose |
+|---|---|---|
+| Prediction-market purchase fee | Buyback wallet | Buy $SOLMARKET and burn it. |
+| Hatch SOL-side fees | Market treasury | Fund reserves, operations, and selective market seed. |
+| Hatch token-side fees | Burn | Reduce token supply automatically. |
+
+---
+
+## Buyback threshold
+
+The buyback wallet should wait until at least $10 has accumulated before executing a buy and burn. This avoids tiny, noisy burns and creates a more visible proof of protocol activity.
+
+| Accumulated fees | Action |
+|---|---|
+| Below $10 | Keep accumulating. |
+| $10 or more | Execute buyback and burn when operating conditions are healthy. |
+
+---
+
+## Why 2%
+
+The fee is intentionally simple:
+
+| Reason | Benefit |
+|---|---|
+| Easy to understand | Users know the cost before signing. |
+| Direct token support | Prediction volume creates buyback demand. |
+| No claim friction | Winners do not pay another fee to claim. |
+| Clean public story | Volume turns into buybacks and burns. |
+
+---
+
+## Full value loop
 
 ```mermaid
 graph LR
-    A[User buys $100 of tickets] -->|2% fee| B[BET_FEE_WALLET: $2]
-    A -->|$100 bet principal| C[Market vault]
-    B --> E[Buyback & Burn]
-    style A fill:#14F195,color:#000
-    style B fill:#9945FF,color:#fff
-    style E fill:#FF6B6B,color:#fff
+    A[Users trade markets] --> B[2% fee]
+    B --> C[Buyback]
+    C --> D[Burn]
+    E[Token trading] --> F[Hatch fee flow]
+    F --> G[Treasury]
+    G --> H[New markets + seed]
+    H --> A
 ```
 
-| Scenario | Amount | Fee |
-|----------|--------|-----|
-| You buy 10 shares at 50¢ | $5.00 | $0.10 fee |
-| Market resolves in your favor | — | — |
-| Your payout from the pool | $9.50 | $0 claim fee |
-| **You receive** | **$9.50** | — |
-
----
-
-## Fee distribution
-
-Prediction-market fees are routed to buyback and burn:
-
-| Allocation | Percentage | Purpose |
-|------------|------------|---------|
-| **$SOLMARKET Buyback & Burn** | 100% of prediction-market fees | Buying $SOLMARKET tokens on the open market and burning them permanently |
-
-The buyback bot waits until the fee wallet accumulates **at least `$10`** before production buyback execution should run. This avoids gas-heavy micro-buys and produces visible, meaningful burns. Configure this with `BUYBACK_MIN_USDC=10`.
-
-Hatch Dev Mode SOL-side fee claims use a separate allocation policy: `15%` market reinvestment, `55%` developer/profit, `20%` reserve, and `10%` operations. See [Treasury & Market Bots](/protocol/treasury-bots) and [Bot Architecture](/protocol/bot-architecture).
-
-<Tip>
-  The buyback & burn mechanism creates deflationary pressure on $SOLMARKET. Every bet contributes to the buyback wallet. See [$SOLMARKET Buyback & Burn](/token/buyback-burn) for details.
-</Tip>
-
----
-
-## Why 2%?
-
-We intentionally set a low fee to:
-
-1. **Keep markets simple** — Users see the fee before signing the purchase transaction.
-2. **Fund token demand** — Fees create a direct buyback-and-burn budget.
-3. **Avoid claim friction** — Winners do not pay a second fee when claiming.
-
----
-
-## Fee transparency
-
-Bet fees are transferred in the signed purchase transaction before the `buy_tickets` instruction. This means:
-
-- The user sees the total cost before signing.
-- The fee transfer to `BET_FEE_WALLET` is visible on-chain.
-- The market vault receives the bet principal; the buyback wallet receives the fee.
-
-<Note>
-  The current frontend/backend config uses `FEE_BPS=200` (200 basis points = 2%). The claim instruction itself does not deduct a separate protocol fee.
-</Note>
+This keeps the model easy to explain: market activity supports the token, and token activity helps fund more markets.

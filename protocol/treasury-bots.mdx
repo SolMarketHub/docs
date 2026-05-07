@@ -1,137 +1,83 @@
 ---
 title: "Treasury Policy"
-description: "How SolMarket allocates Hatch-claim revenue across reinvestment, profit, reserve, and operations."
+description: "How SolMarket decides when to reinvest, reserve, seed markets, and buy back tokens."
 icon: "vault"
 ---
 
-<Tip>
-  This page focuses on the **money-allocation policy**. For the actual cron jobs and decision logic, see [Bot Architecture](/protocol/bot-architecture).
-</Tip>
+## Treasury philosophy
 
-## Overview
-
-SolMarket separates protocol money flows into two wallets:
-
-| Wallet | Purpose |
-|--------|---------|
-| `MARKET_TREASURY_WALLET` | Receives Hatch SOL-side fee claims and funds automated market creation/seed liquidity. |
-| `BET_FEE_WALLET` | Receives prediction-market fees and is reserved for buyback and burn. |
+SolMarket uses revenue to make the product feel active, but capital must be protected. The treasury should never behave like an unlimited market maker.
 
 <Info>
-  The market bot is intentionally conservative. Its job is to create enough high-quality markets to drive volume, not to recycle all protocol revenue into seed bets.
+  The treasury's job is to create opportunity, not to subsidize every market forever.
 </Info>
 
 ---
 
-## Treasury allocation
+## Revenue streams
 
-Every detected Hatch SOL-side fee inflow is recorded and split by policy:
-
-| Allocation | Default share | Purpose |
-|------------|---------------|---------|
-| Market reinvestment | 15% | Fund selected automated markets and initial YES/NO seed. |
-| Developer/profit | 55% | Founder upside, development, and business profit. |
-| Reserve | 20% | Safety buffer and future strategic uses. |
-| Operations | 10% | Infrastructure, RPC, monitoring, and admin costs. |
-
-```env
-TREASURY_MARKET_REINVEST_BPS=1500
-TREASURY_DEV_PROFIT_BPS=5500
-TREASURY_RESERVE_BPS=2000
-TREASURY_OPERATIONS_BPS=1000
-```
-
-Example with `5,000 USDC` equivalent revenue:
-
-| Bucket | Amount |
-|--------|--------|
-| Market reinvestment | `750 USDC` |
-| Developer/profit | `2,750 USDC` |
-| Reserve | `1,000 USDC` |
-| Operations | `500 USDC` |
-
-This avoids the bad outcome where most revenue is automatically spent creating too many markets.
+| Source | Destination | Purpose |
+|---|---|---|
+| Hatch SOL-side fees | Market treasury | Funds operations, reserves, and selective market growth. |
+| Hatch token-side fees | Burn | Reduces supply automatically through Dev Mode. |
+| Prediction-market fee | Buyback wallet | Funds buyback and burn once the minimum threshold is reached. |
+| Recovered seed | Market treasury | Recycled into future market creation. |
 
 ---
 
-## Market spend caps
+## Default allocation
 
-The market bot has a second layer of protection. Even inside the market reinvestment bucket, it does not consider the entire treasury spendable.
+Hatch SOL-side fees are split conservatively:
 
-```env
-TREASURY_MAX_MARKET_SPEND_BPS=1000
-TREASURY_MARKET_RUNWAY_CAP_USDC=250
-MARKET_MIN_TREASURY_USDC=10
-MAX_AUTO_MARKETS_PER_HOUR=3
-```
+| Bucket | Share | Purpose |
+|---|---:|---|
+| Market reinvestment | 15% | Create selected markets and seed both sides. |
+| Development/profit | 55% | Founder upside, development, and business sustainability. |
+| Reserve | 20% | Treasury buffer and volatility protection. |
+| Operations | 10% | Infrastructure, monitoring, and ongoing costs. |
 
-Spendable market budget is the smaller of:
-
-1. `10%` of USDC above the minimum reserve
-2. `250 USDC` runway cap
-
-So if the treasury has thousands of USDC, the bot still behaves like an operator with a fixed market-making budget, not like an unlimited spender.
+Prediction-market fees are simpler: they go to buyback and burn, with execution waiting until the wallet has enough balance to make the burn meaningful.
 
 ---
 
-## Initial liquidity seed
+## Seed levels
 
-Automated markets start near `50/50` by buying both sides in tiny balanced chunks.
+| Level | Target | Use case |
+|---|---:|---|
+| Probe | $5 per side | Test market demand. |
+| Standard | $10 per side | Normal quality market. |
+| Strong | $20 per side | High-confidence opportunity. |
+| Premium | $50 per side | Manual, sponsored, or partner market. |
 
-```env
-BOT_SEED_MIN_USDC_PER_SIDE=2
-BOT_SEED_SHORT_USDC=2
-BOT_SEED_NORMAL_USDC=5
-BOT_SEED_PREMIUM_USDC=10
-BOT_SEED_MAX_USDC_PER_SIDE=10
-```
-
-At a `50/50` start:
-
-| Seed per side | Tickets per side | Total market seed |
-|---------------|------------------|-------------------|
-| `2 USDC` | 4 YES + 4 NO | `4 USDC` |
-| `5 USDC` | 10 YES + 10 NO | `10 USDC` |
-| `10 USDC` | 20 YES + 20 NO | `20 USDC` |
-
-The default hard cap is `10 USDC` per side.
+The orchestrator can spend less than the target if the optimizer finds that fewer tickets leave the market cleaner.
 
 ---
 
-## Why chunks are small
+## When to scale
 
-The contract price changes after each buy. If a bot bought a large YES chunk first and then bought NO, the NO leg could execute at a different price. Ticket counts could end equal, but the USDC pools could be uneven.
-
-To avoid that, SolMarket seeds with fixed chunks:
-
-```text
-TX 1: buy YES 2 tickets + buy NO 2 tickets
-TX 2: buy YES 2 tickets + buy NO 2 tickets
-TX 3: buy YES 2 tickets + buy NO 2 tickets
-...
-```
-
-Two tickets cost `1 USDC` at `50/50`, satisfying the contract minimum while keeping visible odds and pools aligned.
+| Signal | Action |
+|---|---|
+| Broad user volume across many markets | Increase market count and move top opportunities to Standard or Strong. |
+| High token attention but weak market usage | Create fewer markets and keep seed conservative. |
+| Volume concentrated in a few markets | Reinforce winners and reduce long-tail experiments. |
+| Low activity everywhere | Pause expansion and focus on recovery. |
+| Seed recovery deteriorates | Reduce seed tiers and tighten filters. |
 
 ---
 
-## Market selection
+## Public proof of work
 
-The market engine scores both the system and the token candidate.
+Users should be able to see that capital is active without seeing internal implementation details.
 
-System score includes:
+Recommended public metrics:
 
-- recent Hatch SOL-side fee claims
-- treasury SOL/USDC health
-- recent platform volume
-- penalty for active markets with no volume
+| Metric | Why it matters |
+|---|---|
+| Markets created this week | Shows the protocol is alive. |
+| Treasury deployed into seed | Shows money working. |
+| Capital recovered | Shows discipline. |
+| Buyback pending | Shows fee accumulation. |
+| Tokens burned | Shows deflation. |
+| Holder proposals reviewed | Shows the community is heard. |
 
-Candidate score includes:
-
-- 5-minute and 1-hour volume
-- recent transaction count
-- liquidity
-- volatility
-- market-cap range
-
-The bot creates a market only when the combined score is high enough. If too many active markets have no user volume, the bot enters conservative mode.
+This creates a simple story: revenue enters, markets get funded, users trade, fees buy back the token, and burns reduce supply.

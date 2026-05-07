@@ -1,24 +1,24 @@
 ---
 title: "Hatch Launch & Dev Mode"
-description: "How $SOLMARKET launches on Hatch.fun with Dev Mode, where every SOL fee feeds the protocol bot stack."
+description: "How $SOLMARKET uses Hatch.fun Dev Mode to create a clean fee and burn flywheel."
 icon: "egg"
 ---
 
 ## Why Hatch.fun
 
-$SOLMARKET launches on **[hatchfun.xyz](https://www.hatchfun.xyz/)** using the platform's **Dev Mode** preset. Dev Mode hard-codes two properties at the AMM level so the protocol can run a sustainable, on-chain economy without manual bookkeeping:
+$SOLMARKET launches on **[hatchfun.xyz](https://www.hatchfun.xyz/)** using Dev Mode. The setup matters because it gives the token economy two simple, public flows:
 
 <CardGroup cols={2}>
-  <Card title="100% SOL-side fees → dev wallet" icon="hand-holding-dollar">
-    Every SOL that the pool collects on swaps is routed to the **token launcher wallet** (the SolMarket dev wallet). This becomes the single revenue stream for the Hatch Claim Bot.
+  <Card title="SOL-side fees to treasury" icon="hand-holding-dollar">
+    SOL-side trading fees flow to the launcher wallet, where they can be claimed and allocated by treasury policy.
   </Card>
-  <Card title="100% token-side fees → burn" icon="fire">
-    Every $SOLMARKET token collected as a fee is **burnt at the AMM level**. There is no router, no human signer, and no opt-out. Every swap reduces circulating supply.
+  <Card title="Token-side fees burn" icon="fire">
+    Token-side fees are burned automatically at the pool level, reducing circulating supply through trading activity.
   </Card>
 </CardGroup>
 
 <Info>
-  Dev Mode is the closest thing on Hatch to a built-in deflationary PvE: the pool fights against its own supply on every trade, and the protocol earns SOL it can route into bots, treasury, and buyback.
+  This creates a clean flywheel: token trading funds treasury activity, and token-side fees reduce supply.
 </Info>
 
 ---
@@ -27,97 +27,56 @@ $SOLMARKET launches on **[hatchfun.xyz](https://www.hatchfun.xyz/)** using the p
 
 ```mermaid
 sequenceDiagram
-    participant Launcher as Dev (Launcher)
-    participant Hatch as hatchfun.xyz
-    participant Pool as $SOLMARKET / SOL Pool
-    participant DevW as Dev Wallet (SOL fees)
-    participant Burn as Burn (token fees)
+    participant Launcher as Launcher
+    participant Hatch as Hatch.fun
+    participant Pool as $SOLMARKET Pool
+    participant Treasury as Treasury Flow
+    participant Burn as Token Burn
 
-    Launcher->>Hatch: Connect wallet
-    Launcher->>Hatch: Configure token (name, symbol, supply)
-    Launcher->>Hatch: Toggle "Dev Mode" preset
-    Hatch-->>Launcher: Confirm 100% SOL→dev / 100% token→burn
-    Launcher->>Hatch: Pay launch fee + sign create TX
-    Hatch->>Pool: Deploy mint + create pool
-    Pool-->>DevW: Routes SOL fees on every swap
-    Pool-->>Burn: Burns token fees on every swap
+    Launcher->>Hatch: Create token with Dev Mode
+    Hatch->>Pool: Launch trading pool
+    Pool-->>Treasury: Route SOL-side fees
+    Pool-->>Burn: Burn token-side fees
 ```
 
 ---
 
-## What goes on-chain at launch
+## Economic role
 
-| Property | Value | Notes |
-|----------|-------|-------|
-| **Launch platform** | Hatch.fun | DLMM-based bonding pool |
-| **Mode** | Dev Mode | Required preset |
-| **SOL fee receiver** | `DEV_WALLET` (launcher) | 100% of SOL-denominated fees |
-| **Token fee receiver** | Burn | 100% burn at AMM level |
-| **Mint address** | `TBA at launch` | Will be published in [Tokenomics](/token/tokenomics) |
-| **Pool / lbPair address** | `TBA at launch` | Required by the [Hatch Claim Bot](/protocol/bot-architecture#hatch-claim-bot) |
+| Flow | Role |
+|---|---|
+| SOL-side fees | Fund reserves, operations, selected market creation, and seed liquidity. |
+| Token-side fees | Reduce token supply automatically. |
+| Prediction-market fees | Fund buyback and burn separately. |
 
-<Warning>
-  **Don't change the Dev Mode preset.** The bot stack assumes 100/100 routing. If the pool config diverges, the Hatch Claim Bot will still claim, but the deflationary PvE assumption documented here breaks.
-</Warning>
+These flows are intentionally separated. Treasury capital funds product growth. Prediction-market fees support token buybacks. Token-side trading fees burn automatically.
 
 ---
 
-## What the dev wallet receives
-
-The dev wallet is **not** a profit wallet — it's the **inbox for the Hatch Claim Bot**. Every SOL collected by the pool sits in the launcher's claimable balance until the bot claims it.
-
-```mermaid
-graph LR
-    A[Trader swaps SOL → $SOLMARKET] -->|fee in SOL| P[Pool]
-    A2[Trader swaps $SOLMARKET → SOL] -->|fee in SOL| P
-    A2 -->|fee in token| B[🔥 Burn at AMM]
-    P -->|claimable balance| W[Dev Wallet / Launcher PDA]
-    W -->|on schedule| C[Hatch Claim Bot]
-    C -->|split by policy| T[Treasury Allocator]
-    style W fill:#9945FF,color:#fff
-    style B fill:#FF6B6B,color:#fff
-    style C fill:#14F195,color:#000
-```
-
-The full lifecycle of those SOL fees — claim, allocate, reinvest, buyback — is described in [Bot Architecture](/protocol/bot-architecture).
-
----
-
-## Why this design is honest
+## Why this is clean
 
 <AccordionGroup>
-  <Accordion title="No hidden tax" icon="receipt">
-    Hatch shows the fee split publicly on the pool page. Anyone can verify that the dev wallet only receives the SOL-side fee and that the token-side is burnt.
+  <Accordion title="No complex fee story" icon="receipt">
+    Users can understand the model quickly: one side funds treasury, the other side burns.
   </Accordion>
-  <Accordion title="No mint authority abuse" icon="shield">
-    The mint authority is renounced or locked at launch (depending on Hatch's flow at that moment). The bot stack only **buys** $SOLMARKET on the open market — it never mints new supply.
+  <Accordion title="No manual token burn step" icon="fire">
+    Token-side fees burn at the pool level, so the burn does not depend on a manual team action.
   </Accordion>
-  <Accordion title="Burn is automatic" icon="fire">
-    Token-side fees never touch a human wallet. There is no scenario where the team "forgets" to burn — the AMM does it on every swap.
+  <Accordion title="Revenue can be seen working" icon="chart-line">
+    Claimed SOL-side fees can be routed into market creation, seed liquidity, reserves, and operations.
   </Accordion>
-  <Accordion title="Top-holder voting power" icon="users">
-    Because supply only goes down, holding a fixed amount of $SOLMARKET represents a **growing share** of the supply over time. This is what enables the [holder-gated /create-market](/protocol/holder-gate) flow.
+  <Accordion title="Aligned holder access" icon="users">
+    As supply decreases, meaningful holders can become more important participants in market curation.
   </Accordion>
 </AccordionGroup>
 
 ---
 
-## Verifying Dev Mode after launch
+## What will be published after launch
 
-Once the pool is live you can verify the setup yourself:
-
-<Steps>
-  <Step title="Open the pool on Hatch.fun">
-    Navigate to the $SOLMARKET pool page on hatchfun.xyz. The Dev Mode badge and the SOL-fee / token-burn split should be visible.
-  </Step>
-  <Step title="Check the launcher claim PDA">
-    Use the [Hatch SDK](https://github.com/hatchfun/hatch-sdk) `getLauncherPda(mint)` helper or read the pool account on Solscan. The `claimable_sol` field grows on every swap.
-  </Step>
-  <Step title="Match against Treasury inflows">
-    Each successful claim is recorded in our `treasury_events` table and surfaced in the [Bot Architecture dashboard](/protocol/bot-architecture#observability). On-chain claim signatures match the SOL deltas.
-  </Step>
-</Steps>
-
-<Tip>
-  The Hatch Claim Bot is feature-gated until the Hatch SDK adapter is pinned and tested. During this phase it can record status and treasury deltas, but it should not execute live claims. See [Bot Architecture → Hatch Claim Bot](/protocol/bot-architecture#hatch-claim-bot) for the production switch.
-</Tip>
+| Item | Why it matters |
+|---|---|
+| Token mint | Lets users verify the correct asset. |
+| Pool page | Lets users verify Dev Mode fee routing. |
+| Treasury reporting | Shows how SOL-side fees are allocated. |
+| Burn reporting | Shows supply reduction over time. |
