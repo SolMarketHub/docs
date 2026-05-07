@@ -44,7 +44,9 @@ Prediction-market fees are routed to buyback and burn:
 |------------|------------|---------|
 | **$SOLMARKET Buyback & Burn** | 100% of prediction-market fees | Buying $SOLMARKET tokens on the open market and burning them permanently |
 
-Token-fee claims use a separate allocation policy: `15%` market reinvestment, `55%` developer/profit, `20%` reserve, and `10%` operations. See [Treasury & Market Bots](/protocol/treasury-bots).
+The buyback bot waits until the fee wallet accumulates **at least `$10`** before production buyback execution should run. This avoids gas-heavy micro-buys and produces visible, meaningful burns. Configure this with `BUYBACK_MIN_USDC=10`.
+
+Hatch Dev Mode SOL-side fee claims use a separate allocation policy: `15%` market reinvestment, `55%` developer/profit, `20%` reserve, and `10%` operations. See [Treasury & Market Bots](/protocol/treasury-bots) and [Bot Architecture](/protocol/bot-architecture).
 
 <Tip>
   The buyback & burn mechanism creates deflationary pressure on $SOLMARKET. Every bet contributes to the buyback wallet. See [$SOLMARKET Buyback & Burn](/token/buyback-burn) for details.

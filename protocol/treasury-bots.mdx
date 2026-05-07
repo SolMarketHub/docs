@@ -1,8 +1,12 @@
 ---
-title: "Treasury & Market Bots"
-description: "How SolMarket funds, creates, and seeds automated prediction markets without overspending treasury capital."
-icon: "bot"
+title: "Treasury Policy"
+description: "How SolMarket allocates Hatch-claim revenue across reinvestment, profit, reserve, and operations."
+icon: "vault"
 ---
+
+<Tip>
+  This page focuses on the **money-allocation policy**. For the actual cron jobs and decision logic, see [Bot Architecture](/protocol/bot-architecture).
+</Tip>
 
 ## Overview
 
@@ -10,7 +14,7 @@ SolMarket separates protocol money flows into two wallets:
 
 | Wallet | Purpose |
 |--------|---------|
-| `MARKET_TREASURY_WALLET` | Receives token-fee claims and funds automated market creation/seed liquidity. |
+| `MARKET_TREASURY_WALLET` | Receives Hatch SOL-side fee claims and funds automated market creation/seed liquidity. |
 | `BET_FEE_WALLET` | Receives prediction-market fees and is reserved for buyback and burn. |
 
 <Info>
@@ -21,7 +25,7 @@ SolMarket separates protocol money flows into two wallets:
 
 ## Treasury allocation
 
-Every detected token-fee inflow is recorded and split by policy:
+Every detected Hatch SOL-side fee inflow is recorded and split by policy:
 
 | Allocation | Default share | Purpose |
 |------------|---------------|---------|
@@ -117,7 +121,7 @@ The market engine scores both the system and the token candidate.
 
 System score includes:
 
-- recent token-fee claims
+- recent Hatch SOL-side fee claims
 - treasury SOL/USDC health
 - recent platform volume
 - penalty for active markets with no volume

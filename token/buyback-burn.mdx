@@ -37,9 +37,14 @@ Every bet purchase includes a **2% protocol fee** routed to `BET_FEE_WALLET`.
 |-----|-------|-----------------------|
 | **Buyback & burn** | **100% of prediction-market fees** | **$2.00** |
 
-### Source 2: Token trading fees
+### Source 2: Hatch Dev Mode token trading fees
 
-$SOLMARKET trading through Hatch/DLMM generates fees for the market treasury. These are not automatically all spent on buybacks.
+$SOLMARKET trading through Hatch Dev Mode has two fee paths:
+
+- **100% of SOL-side fees** accrue to the launcher/dev wallet, then flow into the Hatch Claim Bot and treasury policy.
+- **100% of token-side fees** are burnt at the AMM level automatically.
+
+SOL-side fees are not automatically all spent on buybacks. They fund the operating treasury first.
 
 Default treasury allocation:
 
@@ -52,33 +57,19 @@ Default treasury allocation:
 
 See [Treasury & Market Bots](/protocol/treasury-bots) for the spend caps and market seed policy.
 
-Legacy launch fee context:
-
-**DBC phase (2.5% fee):**
-
-| Use | Amount per $100 trade |
-|-----|----------------------|
-| Team & operations (90% of creator share) | $1.80 |
-| **Buyback & burn (10% of creator share)** | **$0.20** |
-| Meteora protocol | $0.50 |
-
-**DAMM v2 phase (1.5% fee):**
-
-| Use | Amount per $100 trade |
-|-----|----------------------|
-| LP rewards + Team | Variable |
-| **Buyback & burn** | **Ongoing** |
-
 ---
 
 ## How buyback & burn works
 
 <Steps>
   <Step title="Revenue accumulates">
-    Prediction-market fees accumulate in `BET_FEE_WALLET`. Token trading fees accumulate separately in the market treasury.
+    Prediction-market fees accumulate in `BET_FEE_WALLET`. Token-trading SOL fees accumulate in the market treasury via the [Hatch Claim Bot](/protocol/bot-architecture#hatch-claim-bot).
+  </Step>
+  <Step title="Wait for the $10 floor">
+    The buyback bot polls the fee wallet every 10 minutes. Production execution should only start once the accumulated balance crosses **`BUYBACK_MIN_USDC=10`**. Below the floor, the cycle is skipped to avoid wasting gas on dust.
   </Step>
   <Step title="Buyback execution">
-    At regular intervals, the protocol uses the accumulated USDC/SOL to **market-buy $SOLMARKET** from the Meteora pool.
+    Once the floor is crossed, the bot uses the accumulated USDC/SOL to **market-buy $SOLMARKET** from the Hatch pool.
   </Step>
   <Step title="Permanent burn">
     Purchased tokens are sent to the **Solana burn address** — a known address with no private key. These tokens are irreversibly destroyed.
@@ -90,6 +81,14 @@ Legacy launch fee context:
     The total circulating supply of $SOLMARKET permanently decreases. This is verifiable on-chain by anyone.
   </Step>
 </Steps>
+
+<Note>
+  In addition to this bot-driven buyback, the Hatch Dev-Mode pool **burns 100% of token-side fees automatically on every swap**. That happens at the AMM level — no bot, no human signer. See [Hatch Launch & Dev Mode](/protocol/hatch-launch).
+</Note>
+
+<Warning>
+  Current implementation state: the backend buyback monitor records threshold events. Live swap-and-burn execution must remain disabled until the Hatch route adapter is tested and the production floor is set to `BUYBACK_MIN_USDC=10`.
+</Warning>
 
 ---
 
@@ -112,11 +111,11 @@ Here's how the buyback & burn scales with prediction-market volume:
 
 ## Transparency & verification
 
-Every buyback and burn transaction is executed on-chain. You can verify:
+When live execution is enabled, every buyback and burn transaction is executed on-chain. You can verify:
 
 <CardGroup cols={2}>
   <Card title="Buyback wallet" icon="wallet">
-    The wallet that receives protocol revenue and executes buybacks will be published. All inflows and outflows are on-chain.
+    The wallet that receives protocol revenue will be published. All inflows are on-chain, and outflows become verifiable once live execution is enabled.
   </Card>
   <Card title="Burn transactions" icon="fire">
     Every burn is a token transfer to the burn address. Search the burn address on Solscan to see all burned tokens and timestamps.
@@ -135,7 +134,7 @@ Every buyback and burn transaction is executed on-chain. You can verify:
 
 | Mechanism | Effect | SolMarket |
 |-----------|--------|-----------|
-| Buyback & burn | Deflationary, revenue-backed | ✅ Active |
+| Buyback & burn | Deflationary, revenue-backed | Monitor active; execution gated |
 | Staking rewards | Inflationary, dilutive | ❌ Not used |
 | Emission farming | Highly inflationary | ❌ Not used |
 | Revenue sharing | Non-dilutive | 🔜 Planned |

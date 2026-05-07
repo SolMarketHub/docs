@@ -1,69 +1,128 @@
 ---
-title: 'API Reference'
-description: 'SolMarket backend API for market data and user operations.'
+title: "API Reference"
+description: "SolMarket backend API for market data, verified transaction recording, proposals, and admin operations."
 ---
 
 ## Base URL
 
-```
+```text
 https://api.solmarket.app/api/v1
 ```
 
 <Note>
-  The SolMarket API is used by the frontend to fetch market data, user positions, and submit metadata. **All financial transactions happen directly on Solana** — the API never handles funds.
+  The API stores metadata and verifies confirmed Solana transactions. It does not custody funds, sign user transactions, or accept client-provided financial amounts as truth.
 </Note>
 
-## Endpoints
-
-### Markets
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/markets` | List all markets (active, resolved, refunded) |
-| `GET` | `/markets/:id` | Get a single market with pool data and activity |
-| `POST` | `/markets` | Create a new market (admin only) |
-
-### Users
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/users/:wallet/bets` | Get all bets for a wallet address |
-| `GET` | `/users/:wallet/claims` | Get all claims for a wallet address |
-
-### Admin
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/admin/resolve` | Trigger market resolution (oracle) |
-| `POST` | `/admin/create-market` | Create a new prediction market |
+---
 
 ## Authentication
 
-Admin endpoints require a Bearer token. Public endpoints (markets, user data) are read-only and unauthenticated.
+SolMarket uses two wallet authentication modes.
+
+| Mode | Headers | Used by |
+|------|---------|---------|
+| Wallet header | `x-wallet-address` | Legacy user reads and financial transaction recording after the user has already signed on-chain |
+| Signed wallet request | `x-wallet-address`, `x-wallet-message`, `x-wallet-signature` | Admin actions and holder-gated proposal flows |
+
+Signed requests use a base64-encoded JSON message with this shape:
+
+```json
+{
+  "wallet": "<wallet public key>",
+  "method": "POST",
+  "path": "/api/v1/markets/proposals",
+  "ts": 1710000000000,
+  "nonce": "random-unique-nonce"
+}
+```
+
+The signature must be an Ed25519 wallet signature over the raw message bytes. The backend checks method, path, timestamp, nonce, wallet, and signature validity.
+
+<Warning>
+  Admin endpoints require signed wallet headers. The wallet must be the oracle authority or appear in `ADMIN_WALLETS`.
+</Warning>
+
+---
+
+## Markets
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/markets` | Public | List markets. Supports `status`, `q`, `limit`, and `verify=false`. |
+| `GET` | `/markets/protocol/stats` | Public | Protocol volume, fees, buyback, burn, and holder-gate stats. |
+| `GET` | `/markets/:id` | Public | Fetch one market and verify active market PDA state. |
+| `GET` | `/markets/:id/bets` | Public | Paginated bet history for one market. |
+| `GET` | `/markets/:id/price-history` | Public | Stored market price history. |
+| `GET` | `/markets/:id/token-price-history` | Public | Stored token price history. |
+| `POST` | `/markets` | Signed admin | Create a market directly and seed initial liquidity. |
+
+Query examples:
 
 ```bash
-# Example: Fetch all active markets
-curl https://api.solmarket.app/api/v1/markets
-
-# Example: Fetch user bets
-curl https://api.solmarket.app/api/v1/users/YOUR_WALLET/bets
+curl "https://api.solmarket.app/api/v1/markets?status=active&q=BONK&limit=50&verify=false"
+curl "https://api.solmarket.app/api/v1/markets?q=CA:So11111111111111111111111111111111111111112"
 ```
 
-## Response format
+---
 
-All responses return JSON:
+## Financial recording
+
+The frontend submits the on-chain transaction first. The API records it only after verifying the confirmed transaction on Solana.
+
+| Method | Endpoint | Auth | Verification |
+|--------|----------|------|--------------|
+| `POST` | `/markets/:id/bet` | `x-wallet-address` | Parses `buy_tickets`, validates wallet/market/vault/user ATA, and derives side, tickets, paid amount, price, and `max_cost` from chain data. |
+| `POST` | `/markets/:id/claim` | `x-wallet-address` | Parses claim/refund transaction and derives the realized USDC delta from chain data. |
+
+Client-supplied `tickets`, `totalPaid`, and `amount` are treated as hints only. The backend records the values verified from the transaction.
+
+---
+
+## Holder proposals
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/markets/proposals` | Signed wallet | Submit a holder-gated market proposal. |
+| `GET` | `/markets/proposals` | Signed admin | List pending proposals. |
+| `POST` | `/markets/proposals/:id/approve` | Signed admin | Re-check holder eligibility and approve or attach a market ID. |
+| `POST` | `/markets/proposals/:id/reject` | Signed admin | Reject a proposal. |
+
+Current implementation checks an absolute project-token balance. The production target is a supply-share gate: `1%` in bootstrap phase and `0.5%` in expansion phase.
+
+---
+
+## Users
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/users/me` | `x-wallet-address` | Get or create the connected wallet profile. |
+| `GET` | `/users/:wallet/profile` | Public | Public profile and aggregate stats. |
+| `GET` | `/users/:wallet/bets` | Public | Wallet bet history. |
+| `GET` | `/users/:wallet/claims` | Public | Wallet claim/refund history. |
+| `GET` | `/users/:wallet/notifications` | Public | Recent notifications. |
+| `POST` | `/users/:wallet/notifications/read` | Public | Mark notifications as read. |
+
+---
+
+## Admin
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/admin/whoami` | Signed wallet | Check whether the signed wallet is an admin. |
+| `GET` | `/admin/price/:mint` | Public | Fetch the current token price. |
+| `GET` | `/admin/stats` | Signed admin | Basic admin stats. |
+| `POST` | `/admin/resolve/:id` | Signed admin | Manually resolve a market on-chain. |
+
+---
+
+## Error shape
+
+Errors return JSON with an `error` string:
 
 ```json
 {
-  "data": [...],
-  "error": null
+  "error": "Transaction verification failed"
 }
 ```
 
-Error responses:
-
-```json
-{
-  "error": "Market not found"
-}
-```
+Common status codes are `400` for invalid input, `401` for missing or invalid wallet authentication, `403` for unauthorized admin or holder actions, `404` for missing records, and `409` for duplicate financial transactions.

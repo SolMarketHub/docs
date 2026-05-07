@@ -27,7 +27,10 @@
               "protocol/parimutuel",
               "protocol/smart-contract",
               "protocol/oracle",
+              "protocol/hatch-launch",
+              "protocol/bot-architecture",
               "protocol/treasury-bots",
+              "protocol/holder-gate",
               "protocol/fees"
             ]
           },
@@ -49,7 +52,6 @@
             "pages": [
               "token/overview",
               "token/tokenomics",
-              "token/meteora",
               "token/buyback-burn"
             ]
           }

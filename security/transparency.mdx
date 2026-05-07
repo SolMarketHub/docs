@@ -69,16 +69,16 @@ All values are available on-chain:
   <Accordion title="View the source code" icon="code">
     The smart contract source code is published on GitHub. You can read every line of the program that handles your funds.
   </Accordion>
-  
+
   <Accordion title="Build and compare" icon="hammer">
     For maximum trust, you can:
     1. Clone the repository
     2. Build exactly the same binary (`anchor build`)
     3. Compare the SHA-256 hash of your build with the deployed program's executable data
-    
+
     If the hashes match, the deployed program is provably the same as the published source code.
   </Accordion>
-  
+
   <Accordion title="Check the IDL" icon="file-lines">
     The Interface Description Language (IDL) shows every instruction, account, and type in the program. You can verify that:
     - There is **no** `withdraw` or `drain` instruction
@@ -91,10 +91,10 @@ All values are available on-chain:
 
 ## 5. Verify fee usage
 
-Protocol fees (1% on winning claims) are sent to a known fee wallet. You can:
+Prediction-market fees (2% on bet purchases) are sent to a known buyback wallet. You can:
 
 1. Track the fee wallet on Solscan
-2. Monitor $SOLMARKET buyback transactions on Meteora/Raydium
+2. Monitor $SOLMARKET buyback transactions once live execution is enabled
 3. Verify burn transactions on-chain (tokens sent to burn address)
 
 The buyback & burn wallet will be published and all transactions will be independently verifiable.
